@@ -77,8 +77,14 @@ end
 % N = cov(N1');
 
 
+
+% figure(1)
+% hold on
+% plot(times,phi_0(1,:))
+% plot(times,phi_n(1,:))
+
 %% tradition reconstruction
-S = [SNin]; %change to [SNin SNout] for full basis
+S = [SNin];
 pS=pinv(S); %95x306
 XN=pS*phi_0; %multiple moments 95x500
 data_rec=real(SNin*XN(1:size(SNin,2),:));
