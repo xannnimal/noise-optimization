@@ -140,7 +140,7 @@ check_data_fosters_max = max(check_data_fosters);
 check_data_fosters_mean = mean(check_data_fosters);
 
 
-%% plot
+%% plot raw and recon data
 chan=3  ;
 figure(1)
 hold on
@@ -153,3 +153,25 @@ xlabel('Time (sec)')
 ylabel('Dipole Signal, Chan 3 (T)')
 legend({'raw','SSS','iter','Fosters'},'location','northwest')
 %legend({'raw','Fosters'},'location','northwest')
+
+%% calculate PSD - something like this
+%estimate of PSD. "periofogram" function has lots of variations we should
+% investigate, this is the simplest implementation for now
+[psd_raw,f]=periodogram(phi_0);
+[psd_sss,f]=periodogram(data_rec);
+[psd_it,f]=periodogram(data_rec_it);
+[psd_fosters,f]=periodogram(data_rec_fosters);
+%plot median PSD
+figure(2)
+hold on
+semilogy(f,median(psd_raw,2),'linewidth',2)
+semilogy(f,median(psd_sss,2),'linewidth',2)
+semilogy(f,median(psd_it,2),'linewidth',2)
+semilogy(f,median(psd_fosters,2),'linewidth',2)
+grid on
+legend('raw','SSS', 'SSS iter','Fosters','Location','best')
+xlabel('frequency (Hz)')
+ylabel('noise (fT/rtHz)')
+title('PSD of Reconstructed Simulated Data')
+set(gca,'FontSize',12)
+set(gcf,'color','w')
