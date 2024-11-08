@@ -1,5 +1,6 @@
 %% implementing Foster's inverse 
 % noise optimization of basic component extraction
+% test commit comment
 
 %% constant variables 
 Lin = 8; % Truncation order of the internal VSH basis
