@@ -56,11 +56,14 @@ for i=(1:3)
     q_t(i,:) = q(i)*sin(2*pi*(f_start*times - times.^2*rate_of_change/2));
 end
 
+%% TODO: add a baseline period before and after "phi_0"
 % interior current dipole, calculate multipole moments
 for i=(1:size(times,2))
     phi_0(:,i) = dipole_field_sarvas(rs',q_t(:,i),r0',R,EX,EY,EZ,mags)';
     alpha(:,i) = alpha_dipole(r0',q_t(:,i),Lin)'; %not normalized, in SI units
 end
+
+%% TODO: change to constant noise over whole period
 %add gaussian noise at 10 percent of max value of phi_0
 noise = randn(size(phi_0,1),size(phi_0,2));
 % Create an amplitude for that noise that is 10% of the noise-free signal at every element.
@@ -68,6 +71,8 @@ amplitude = 0.15 * phi_0;
 % Now add the noise-only signal to your original noise-free signal to create a noisy signal.
 N1 = amplitude .* noise;
 phi_0 = phi_0 + N1;
+
+%apply magscale
 for i=(1:size(phi_0,1))
     if mod(i,3)==0 %every third is a magnetometer
         phi_0(i,:)=phi_0(i,:)*100;
@@ -75,6 +80,8 @@ for i=(1:size(phi_0,1))
         phi_0(i,:)=phi_0(i,:);
     end
 end
+
+%% TODO: calculate the covariance of simulated noise
 % N = cov(N1');
 
 
@@ -90,13 +97,12 @@ XN_it = xi([SNin,SNout],phi_0,Lin,Lout-1,ni);
 data_rec_it = real(SNin*XN_it(1:size(SNin,2),:));
 
 %% reconstruct data fosters
-% XN_real = real(XN);
-% load in covariance 
+% load in covariance (comment this out when we have calculated N)
 covariance = load("covariance.mat","cov");
 N = covariance.cov;
+
 %calculate matrix "Sij" for Foster's inverse:  x(bar) = B*phi_0 + b
 alpha_cov = cov(alpha'); %95x95 or 500x500?
-
 %normalize alpha_cov
 for i=(1:size(Sin,2))
     for j=(1:size(Sin,2))
@@ -140,6 +146,9 @@ check_data_fosters_min = min(check_data_fosters);
 check_data_fosters_max = max(check_data_fosters);
 check_data_fosters_mean = mean(check_data_fosters);
 
+%% TODO: implement SNR calcs
+%use function I made and time period of baseline vs signal
+%snr = snr_data(no_signal, signal)
 
 %% plot raw and recon data
 chan=3  ;
@@ -155,6 +164,8 @@ ylabel('Dipole Signal, Chan 3 (T)')
 legend({'raw','SSS','iter','Fosters'},'location','northwest')
 %legend({'raw','Fosters'},'location','northwest')
 
+
+return
 %% calculate PSD - something like this
 %estimate of PSD. "periofogram" function has lots of variations we should
 % investigate, this is the simplest implementation for now
