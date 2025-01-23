@@ -1,6 +1,5 @@
 %% implementing Foster's inverse 
 % noise optimization of basic component extraction
-% test commit comment
 
 %% constant variables 
 Lin = 8; % Truncation order of the internal VSH basis
@@ -64,8 +63,8 @@ for i=(1:size(times/2,2))
 end
 %add gaussian noise at 10 percent of max value of phi_0
 %noise = randn(size(phi_0,1),size(phi_0,2));
-noise = floor(1/2*(max(phi_0(:))-min(phi_0(:))))*.15*randn(size(phi_0,1),2*size(phi_0,2));
-noise = randn(size(phi_0,1),2*size(phi_0,2));
+%noise = floor(1/2*(max(phi_0(:))-min(phi_0(:))))*.15*randn(size(phi_0,1),2*size(phi_0,2));
+noise = .5*randn(size(phi_0,1),2*size(phi_0,2));
 % Create an amplitude for that noise that is 10% of the noise-free signal at every element.
 amplitude = 0.15 * phi_0;
 % Now add the noise-only signal to your original noise-free signal to create a noisy signal.
@@ -152,16 +151,19 @@ check_data_fosters_mean = mean(check_data_fosters);
 chan=3  ;
 figure(1)
 hold on
-plot(timestep:timestep:timestep*size(phi_0,2),phi_0(chan,:),"green")
-%plot(times,data_rec(chan,:))
-%plot(times,data_rec_it(chan,:))
-plot(timestep:timestep:timestep*size(phi_0,2),data_rec_fosters(chan,:),"blue")
+times2 = timestep:timestep:timestep*size(phi_0,2);
+plot(times2,phi_0(chan,:),"green") %raw
+plot(times2,data_rec(chan,:),"red") %sss
+%plot(times2,data_rec_it(chan,:))
+plot(times2,data_rec_fosters(chan,:),"blue") %foster
 title('306 SQUID, Currrent Dipole [5cm,0,0] Reconstruction')
 xlabel('Time (sec)')
 ylabel('Dipole Signal, Chan 3 (T)')
 legend({'raw','SSS','iter','Fosters'},'location','northwest')
+legend({'raw','SSS','Fosters'},'location','northwest')
 %legend({'raw','Fosters'},'location','northwest')
 
+%{
 %% calculate PSD - something like this
 %estimate of PSD. "periofogram" function has lots of variations we should
 % investigate, this is the simplest implementation for now
@@ -183,3 +185,4 @@ ylabel('noise (fT/rtHz)')
 title('PSD of Reconstructed Simulated Data')
 set(gca,'FontSize',12)
 set(gcf,'color','w')
+%}
