@@ -1,5 +1,5 @@
 %% load phantom data/matrix and perform fosters, then save
-
+clear
 %% constant variables 
 Lin = 8; % Truncation order of the internal VSH basis
 Lout = 3; % Truncation order of the external VSH basis
@@ -102,6 +102,44 @@ data_rec_fosters= real(SNin*x_bar(1:size(SNin,2),:));
 var_raw = var(data_rec);
 var_f = var(data_rec_fosters);
 
+
+%% sub angles
+for i=(1:size(times,2))
+    check_data(i) = subspace(phi_0(:,i), data_rec)*180/pi;
+    check_data_it(i) = subspace(phi_0(:,i), data_rec_it)*180/pi;
+    check_data_fosters(i) = subspace(phi_0(:,i), data_rec_fosters)*180/pi;
+end
+check_data_min = min(check_data);
+check_data_max = max(check_data);
+check_data_mean = mean(check_data);
+
+check_data_it_min = min(check_data_it);
+check_data_it_max = max(check_data_it);
+check_data_it_mean = mean(check_data_it);
+
+check_data_fosters_min = min(check_data_fosters);
+check_data_fosters_max = max(check_data_fosters);
+check_data_fosters_mean = mean(check_data_fosters);
+
+return
+%% plot raw and recon data
+chan=3  ;
+figure(1)
+hold on
+times2 = timestep:timestep:timestep*size(phi_0,2);
+plot(times2,phi_0(chan,:),"green") %raw
+plot(times2,data_rec(chan,:),"red") %sss
+%plot(times2,data_rec_it(chan,:))
+plot(times2,data_rec_fosters(chan,:),"blue") %foster
+title('306 SQUID, Currrent Dipole [5cm,0,0] Reconstruction')
+xlabel('Time (sec)')
+ylabel('Dipole Signal, Chan 3 (T)')
+legend({'raw','SSS','iter','Fosters'},'location','northwest')
+legend({'raw','SSS','Fosters'},'location','northwest')
+%legend({'raw','Fosters'},'location','northwest')
+
+
+
 %% save files
 % this creates new data matricies that are the original size nchan with
 % zeros for the entries of "bad" channels and adds the recon data for not
@@ -111,6 +149,7 @@ data_rec_vsh = zeros(nchan,size(data_rec,2));
 data_rec_fos = zeros(nchan,size(data_rec_fosters,2));
 data_rec_its = zeros(nchan,size(data_rec_it,2));
 % add back in good data
+% fix this 
 k=1;
 for i=1:nchan
     if ismember(i, bad_chans)
@@ -129,6 +168,7 @@ data_rec_vsh(323,:)=stim_events;
 data_rec_fos(323,:)=stim_events;
 data_rec_its(323,:)=stim_events;
 
+return
 %% save!!
 % make sure to change this to "iterative" or "sss" instead of "fost"
 % depending on which data matrix you are saving
@@ -136,3 +176,18 @@ outfile = 'C:/Users/xanmc/RESEARCH/Data/fosters_processed/phantom_32_200nam_2024
 [outfid,cals] = fiff_start_writing_raw(outfile,info);
 fiff_write_raw_buffer(outfid,data_rec_fos,cals);
 fiff_finish_writing_raw(outfid);
+
+%% results - message sepp
+% localization
+% psd spectra - should reduce white noise after processing 
+% check amplitude/localization bias 
+% visualization of evoked response - before and after 
+% covar from unprocessed data in MNE-python, if it contains signal from
+% external environment will probably give bias since SSS already gets rid
+% of the external interference - diagonal matrix will probably not cause
+% bias
+% ask eric about all the different ways to calculate covariance
+% different ways to estimate covariance. Idea what time response is,
+% foster's inverse to optimize the covariance using simulated annealing to
+% match where the phantom dipole set should be- minimize variance in
+% baseline period while keeping peak amplitude intact 
