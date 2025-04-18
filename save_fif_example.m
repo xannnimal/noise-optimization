@@ -14,6 +14,12 @@ infile = 'C:/Users/xanmc/RESEARCH/Data/ILABS/Phantom/240708/phantom_32_200nam_20
 
 %setup info and load channel positions
 info = fiff_read_meas_info(infile);
+
+% infile_f = 'C:/Users/xanmc/RESEARCH/Data/ILABS/Phantom/240708/phantom_32_200nam_20240708_fost_raw.fif';
+% %setup info and load channel positions
+% info_f = fiff_read_meas_info(infile_f);
+
+
 nchan=info.nchan;
 for i=1:nchan
     R(:,i)=info.chs(i).loc(1:3,:);
@@ -28,10 +34,8 @@ end
 [raw] = load("phantom_32_200nam_20240708.mat");
 data = raw.raw_data;
 times = raw.raw_times;
-% mark and record stim/events data for later
-stim_events = data(323,:);
 
-%% remove all bad NaN channels
+%% Deal with Bad channels
 % we only want channels beginning with 'MEG...'
 bad_chans = [];
 k=1;
@@ -43,6 +47,9 @@ for i = 1:nchan
         k=k+1;
     end
 end 
+% mark and record stim/hpi/events data for later
+keeps = data(bad_chans,:);
+% remove bad channels from data for now
 data(bad_chans,:)=[];
 R(:,bad_chans)=[];
 EX(:,bad_chans)=[];
@@ -51,6 +58,7 @@ EZ(:,bad_chans)=[];
 
 ch_types=ones(size(EZ,2),1);
 phi_0=data;
+
 
 %% tradition reconstruction
 [Sin,SNin] = Sin_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lin);
@@ -104,41 +112,39 @@ var_f = var(data_rec_fosters);
 
 
 %% sub angles
-for i=(1:size(times,2))
-    check_data(i) = subspace(phi_0(:,i), data_rec)*180/pi;
-    check_data_it(i) = subspace(phi_0(:,i), data_rec_it)*180/pi;
-    check_data_fosters(i) = subspace(phi_0(:,i), data_rec_fosters)*180/pi;
-end
-check_data_min = min(check_data);
-check_data_max = max(check_data);
-check_data_mean = mean(check_data);
+% for i=(1:size(times,2))
+%     check_data(i) = subspace(phi_0(:,i), data_rec)*180/pi;
+%     check_data_it(i) = subspace(phi_0(:,i), data_rec_it)*180/pi;
+%     check_data_fosters(i) = subspace(phi_0(:,i), data_rec_fosters)*180/pi;
+% end
+% check_data_min = min(check_data);
+% check_data_max = max(check_data);
+% check_data_mean = mean(check_data);
+% 
+% check_data_it_min = min(check_data_it);
+% check_data_it_max = max(check_data_it);
+% check_data_it_mean = mean(check_data_it);
+% 
+% check_data_fosters_min = min(check_data_fosters);
+% check_data_fosters_max = max(check_data_fosters);
+% check_data_fosters_mean = mean(check_data_fosters);
 
-check_data_it_min = min(check_data_it);
-check_data_it_max = max(check_data_it);
-check_data_it_mean = mean(check_data_it);
 
-check_data_fosters_min = min(check_data_fosters);
-check_data_fosters_max = max(check_data_fosters);
-check_data_fosters_mean = mean(check_data_fosters);
-
-return
 %% plot raw and recon data
-chan=3  ;
-figure(1)
-hold on
-times2 = timestep:timestep:timestep*size(phi_0,2);
-plot(times2,phi_0(chan,:),"green") %raw
-plot(times2,data_rec(chan,:),"red") %sss
-%plot(times2,data_rec_it(chan,:))
-plot(times2,data_rec_fosters(chan,:),"blue") %foster
-title('306 SQUID, Currrent Dipole [5cm,0,0] Reconstruction')
-xlabel('Time (sec)')
-ylabel('Dipole Signal, Chan 3 (T)')
-legend({'raw','SSS','iter','Fosters'},'location','northwest')
-legend({'raw','SSS','Fosters'},'location','northwest')
-%legend({'raw','Fosters'},'location','northwest')
-
-
+% chan=3  ;
+% figure(1)
+% hold on
+% times2 = timestep:timestep:timestep*size(phi_0,2);
+% plot(times2,phi_0(chan,:),"green") %raw
+% plot(times2,data_rec(chan,:),"red") %sss
+% %plot(times2,data_rec_it(chan,:))
+% plot(times2,data_rec_fosters(chan,:),"blue") %foster
+% title('306 SQUID, Currrent Dipole [5cm,0,0] Reconstruction')
+% xlabel('Time (sec)')
+% ylabel('Dipole Signal, Chan 3 (T)')
+% legend({'raw','SSS','iter','Fosters'},'location','northwest')
+% legend({'raw','SSS','Fosters'},'location','northwest')
+% %legend({'raw','Fosters'},'location','northwest')
 
 %% save files
 % this creates new data matricies that are the original size nchan with
@@ -148,14 +154,13 @@ legend({'raw','SSS','Fosters'},'location','northwest')
 data_rec_vsh = zeros(nchan,size(data_rec,2));
 data_rec_fos = zeros(nchan,size(data_rec_fosters,2));
 data_rec_its = zeros(nchan,size(data_rec_it,2));
-% add back in good data
-% fix this 
-k=1;
+k=1; l=1;
 for i=1:nchan
-    if ismember(i, bad_chans)
-        data_rec_vsh(i,:) = data_rec_vsh(i,:);
-        data_rec_fos(i,:) = data_rec_fos(i,:);
-        data_rec_its(i,:) = data_rec_its(i,:);
+    if ismember(i, bad_chans) %add back in "keeps"
+        data_rec_vsh(i,:) = keeps(l,:);
+        data_rec_fos(i,:) = keeps(l,:);
+        data_rec_its(i,:) = keeps(l,:);
+        l=l+1;
     else
         data_rec_vsh(i,:)=data_rec(k,:);
         data_rec_fos(i,:)=data_rec_fosters(k,:);
@@ -163,16 +168,17 @@ for i=1:nchan
         k=k+1;
     end
 end
-% add back in the "stim_events" channel data for python processing
-data_rec_vsh(323,:)=stim_events;
-data_rec_fos(323,:)=stim_events;
-data_rec_its(323,:)=stim_events;
 
-return
-%% save!!
+%% save data matrix
+save("datarec_sss.mat", 'data_rec_vsh')
+save("datarec_fos.mat", 'data_rec_fos')
+save("datarec_it.mat", 'data_rec_its')
+
+return 
+%% save fif files
 % make sure to change this to "iterative" or "sss" instead of "fost"
 % depending on which data matrix you are saving
-outfile = 'C:/Users/xanmc/RESEARCH/Data/fosters_processed/phantom_32_200nam_20240708_fost.fif';
+outfile = 'C:/Users/xanmc/RESEARCH/Data/fosters_processed/phantom_32_200nam_20240708_test_raw.fif';
 [outfid,cals] = fiff_start_writing_raw(outfile,info);
 fiff_write_raw_buffer(outfid,data_rec_fos,cals);
 fiff_finish_writing_raw(outfid);
