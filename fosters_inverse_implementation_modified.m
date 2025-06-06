@@ -1,6 +1,7 @@
 %% implementing Foster's inverse with simulated data
 % noise optimization of basic component extraction
 % this is for simulated data
+% edits since 6/62025
 clear
 %% constant variables 
 Lin = 8; % Truncation order of the internal VSH basis
