@@ -1,6 +1,7 @@
-%% implementing Foster's inverse 
+%% implementing Foster's inverse with simulated data
 % noise optimization of basic component extraction
-
+% this is for simulated data
+clear
 %% constant variables 
 Lin = 8; % Truncation order of the internal VSH basis
 Lout = 3; % Truncation order of the external VSH basis
@@ -128,6 +129,7 @@ data_rec_fosters= real(SNin*x_bar(1:size(SNin,2),:));
 var_raw = var(data_rec);
 var_f = var(data_rec_fosters);
 
+
 %% sub angles
 for i=(1:size(times,2))
     check_data(i) = subspace(phi_0(:,i), data_rec)*180/pi;
@@ -152,16 +154,30 @@ chan=3  ;
 figure(1)
 hold on
 times2 = timestep:timestep:timestep*size(phi_0,2);
-plot(times2,phi_0(chan,:),"green") %raw
-plot(times2,data_rec(chan,:),"red") %sss
+plot(times2,phi_0(chan,:),"m") %raw
+plot(times2,data_rec(chan,:),"c") %sss
 %plot(times2,data_rec_it(chan,:))
-plot(times2,data_rec_fosters(chan,:),"blue") %foster
+plot(times2,data_rec_fosters(chan,:),"b") %foster
 title('306 SQUID, Currrent Dipole [5cm,0,0] Reconstruction')
 xlabel('Time (sec)')
 ylabel('Dipole Signal, Chan 3 (T)')
 legend({'raw','SSS','iter','Fosters'},'location','northwest')
 legend({'raw','SSS','Fosters'},'location','northwest')
 %legend({'raw','Fosters'},'location','northwest')
+
+
+%% SNR calculations (signal/noise)
+% noise from baseline, peak from data
+% if A is a matrix whose columns are random variables and whose rows are observations 
+% then S is a row vector containing the standard deviation corresponding to each column
+n1=40; n2=200;
+s1=640; s2=800;
+%peak/noise
+SNR_raw = mean(std(phi_0(:,s1:s2)))/mean(std(phi_0(:,n1:n2)));
+SNR_vsh = mean(std(data_rec(:,s1:s2)))/mean(std(data_rec(:,n1:n2)));
+SNR_it = mean(std(data_rec_it(:,s1:s2)))/mean(std(data_rec_it(:,n1:n2)));
+SNR_fost = mean(std(data_rec_fosters(:,s1:s2)))/mean(std(data_rec_fosters(:,n1:n2)));
+
 
 %{
 %% calculate PSD - something like this
