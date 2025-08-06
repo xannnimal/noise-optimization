@@ -34,11 +34,6 @@ for i=(1:306)
     end
 end
 
-%% calculate SSS basis
-[Sin,SNin] = Sin_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lin);
-[Sout,SNout] = Sout_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lout);
-
-
 %% generate current dipole
 %current dipole using Samu's implementation of Sarvas
 rs=[0,0,0];
@@ -80,8 +75,10 @@ end
 
 
 %% tradition reconstruction
+[Sin,SNin] = Sin_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lin);
+[Sout,SNout] = Sout_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lout);
 S = [SNin]; %change to [SNin SNout] for full basis
-pS=pinv(SNin); %95x306
+pS=pinv(S); %95x306
 XN=pS*phi_0; %multiple moments 95x500
 data_rec=real(SNin*XN(1:size(SNin,2),:));
 
@@ -90,37 +87,17 @@ data_rec=real(SNin*XN(1:size(SNin,2),:));
 % XN_it = xi([SNin,SNout],phi_0,Lin,Lout-1,ni);
 % data_rec_it = real(SNin*XN_it(1:size(SNin,2),:));
 
-%% try different N matrices
+%% reconstruct data fosters
+% try different N matrices
 % load in covariance 
 covariance = load("covariance.mat","cov");
 N = covariance.cov;
-
 %diagonal elements, average of N
 % diags = ones(size(EZ,2))*mean(mean(N));
 % N_diag = diag(diags);
 % N=N_diag;
 
-%% reconstruct data fosters
-alpha_cov = cov(alpha');
-for i=(1:size(Sin,2))
-    for j=(1:size(Sin,2))
-        alpha_cov_new(i,j)=alpha_cov(i,j)*norm(Sin(:,i))*norm(Sin(:,j));
-    end
-end
-for i=(1:size(Sin,2))
-    alpha_norm(:,i) = alpha(:,i)*norm(Sin(:,i));
-end
-%find inverse matrix B
-S_star = conj(S)'; 
-first = pinv(S*alpha_cov_new*S_star+N);
-B = alpha_cov_new*S_star*first;
-m_alpha = mean(alpha,2);
-b = m_alpha - B*S*m_alpha;
-%better estimate for multipole moments
-for i=(1:size(timestep:timestep:timestep*size(phi_0,2),2))
-    x_bar(:,i) = B*phi_0(:,i) +b;
-end
-data_rec_fosters= real(SNin*x_bar(1:size(SNin,2),:));
+data_rec_fosters = sim_fosters_inverse(R,EX,EY,EZ,ch_types,phi_0,timestep,alpha,N);
 
 var_raw = var(data_rec);
 var_f = var(data_rec_fosters);

@@ -34,6 +34,7 @@ for i=(1:306)
 end
 
 %% calculate SSS basis
+%Sin matrx is scaled by 100
 [Sin,SNin] = Sin_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lin);
 [Sout,SNout] = Sout_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lout);
 
