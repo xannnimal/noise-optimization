@@ -10,9 +10,6 @@ for i=(1:size(Sin,2))
         alpha_cov_norm(i,j)=alpha_cov(i,j)*norm(Sin(:,i))*norm(Sin(:,j));
     end
 end
-for i=(1:size(Sin,2))
-    alpha_norm(:,i) = alpha(:,i)*norm(Sin(:,i));
-end
 %find inverse matrix B
 S_star = conj(SNin)'; 
 first = pinv(SNin*alpha_cov_norm*S_star+N);
