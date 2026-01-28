@@ -43,8 +43,9 @@ save('phantom_times.mat','phantom_times')
 save('phantom_data.mat','phantom_data')
 clear data
 
-figure(10)
+figure(9)
 hold on
+title('phantom data')
 plot(phantom_times,phantom_data{1,1}(:,:))
 hold off
 
@@ -67,22 +68,27 @@ times = phantom_times;
 q_t= cell(1, numdipole);
 for k=(1:numdipole)
     for i=(1:3)
-        q_t{k}(i,:) = ori_actual(i,k)*sin(2*pi*(f_start*times));
-        %q_t(i,:) = q(i)*sin(2*pi*(f_start*times
+        q_t{k}(i,:) = ori_actual(i,k)*sin(-2*pi*(f_start*times));
     end
     q_t{k}(:,1:51)=0; %add period of no activations before and after
     q_t{k}(:,151:201)=0;
 end
 % calculate known multipole moments from phantom dipoles
+scale = 1e-12;
 X_c = cell(1, numdipole);
 phi_0 = cell(1, numdipole);
 for k=(1:numdipole)
     for i=(1:size(times,2))
-        X_c{k}(:,i) = alpha_dipole(pos_actual(:,k)',q_t{1,k}(:,i),Lin)';
-        phi_0{k}(:,i) = dipole_field_sarvas(rs',q_t{1,k}(:,i),pos_actual(:,k),R,EX,EY,EZ,mags)';
+        X_c{k}(:,i) = alpha_dipole(pos_actual(:,k),q_t{1,k}(:,i),Lin)';
+        phi_0{k}(:,i) = dipole_field_sarvas(rs',q_t{1,k}(:,i),pos_actual(:,k),R,EX,EY,EZ,mags)*scale';
     end
 end
-%plot(times,phi_0{1,1}(305,:))
+
+% figure(10)
+% hold on
+% title('simulated dipole activations')
+% plot(times,real(X_c{1,1}(:,:)))
+% hold off
 
 % calculate SSS basis
 [Sin,SNin] = Sin_vsh_vv([0,0,0]',R,EX,EY,EZ,ch_types,Lin);
@@ -104,7 +110,7 @@ lb = 1e-40*scale*ones([size(N0,1),size(N0,2)]); %lower bound
 ub = 1e-15*scale*ones([size(N0,1),size(N0,2)]); %upper bound
 
 %run for 1000 iterations, plot condition number
-options = optimoptions('simulannealbnd','Display','iter','MaxIterations',200, ...
+options = optimoptions('simulannealbnd','Display','iter','MaxIterations',100, ...
     'PlotFcn',{@saplotbestx,@saplotbestf,@saplotx,@saplotf}); %'OutputFcn',@save_output_iter_cond)
 tic
 [N,naf,exitflag,output] = simulannealbnd(objFun,x0,lb,ub,options);
@@ -138,5 +144,6 @@ data_rec_fosters= real(SNin*x_bar(1:size(SNin,2),:));
 
 figure(11)
 hold on
+title('N-optimized Foster reconstructed data')
 plot(phantom_times,data_rec_fosters(:,:))
 hold off
