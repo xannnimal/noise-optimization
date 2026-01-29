@@ -30,7 +30,7 @@ for i=(1:306)
 end
 
 %% load evoked data for 32 dipoles
-numdipole = 32;
+numdipole = 32; % try with only done dipole
 phantom_data = cell(1, numdipole);
 for k = 1:numdipole
   i = k-1;
@@ -79,7 +79,7 @@ X_c = cell(1, numdipole);
 phi_0 = cell(1, numdipole);
 for k=(1:numdipole)
     for i=(1:size(times,2))
-        X_c{k}(:,i) = alpha_dipole(pos_actual(:,k),q_t{1,k}(:,i),Lin)';
+        X_c{k}(:,i) = alpha_dipole(pos_actual(:,k)',q_t{1,k}(:,i),Lin)';
         phi_0{k}(:,i) = dipole_field_sarvas(rs',q_t{1,k}(:,i),pos_actual(:,k),R,EX,EY,EZ,mags)*scale';
     end
 end
@@ -104,19 +104,20 @@ N0= diag(covar.covar);
 
 %initial point
 scale = 1e10;
-x0 = N0*scale;
 objFun = @(N) fosters_residual(N,X_c,S,phantom_data,phantom_times,numdipole); %objective function
-lb = 1e-40*scale*ones([size(N0,1),size(N0,2)]); %lower bound
-ub = 1e-15*scale*ones([size(N0,1),size(N0,2)]); %upper bound
+lb = 1e-30*ones([size(N0,1),size(N0,2)]); %lower bound
+ub = 1e-15*ones([size(N0,1),size(N0,2)]); %upper bound
+%x0 = N0;
+
 
 %run for 1000 iterations, plot condition number
 options = optimoptions('simulannealbnd','Display','iter','MaxIterations',100, ...
     'PlotFcn',{@saplotbestx,@saplotbestf,@saplotx,@saplotf}); %'OutputFcn',@save_output_iter_cond)
 tic
-[N,naf,exitflag,output] = simulannealbnd(objFun,x0,lb,ub,options);
+[N,naf,exitflag,output] = simulannealbnd(objFun,N0,lb,ub,options);
 toc
 
-N=N/scale;
+%N=N/scale;
 %save('N_1050_opt_1000nam_default_IASoff_evoked.mat','N');
 
 

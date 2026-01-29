@@ -1,6 +1,6 @@
 function residual = fosters_residual(N0,X_c,S,phantom_data,phantom_times,numdipole)
 %% do fosters inverse estimate of X_f, then calculate residual with X_c
-N=diag(N0,0)/1e10;
+N=diag(N0,0);
 X_f = cell(1, numdipole);
 for k=(1:numdipole)
     alpha_cov = cov(X_c{1,k}');
@@ -20,5 +20,5 @@ end
 for k=(1:numdipole)
     resid(:,k) = norm(X_c{1,k}-X_f{1,k});
 end
-residual = norm(resid);
+residual = mean(resid);
 end
